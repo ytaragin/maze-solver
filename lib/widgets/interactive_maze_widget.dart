@@ -1,0 +1,226 @@
+import 'package:flutter/material.dart';
+import 'package:maze/maze.dart';
+import '../models/maze.dart';
+import '../models/maze_path.dart';
+import 'csv_maze_widget.dart';
+
+/// Interactive Maze Widget with path building
+class InteractiveMazeWidget extends StatefulWidget {
+  final String csvPath;
+  final double tileSize;
+
+  const InteractiveMazeWidget({
+    super.key,
+    required this.csvPath,
+    this.tileSize = 32.0,
+  });
+
+  @override
+  State<InteractiveMazeWidget> createState() => _InteractiveMazeWidgetState();
+}
+
+class _InteractiveMazeWidgetState extends State<InteractiveMazeWidget> {
+  Maze? _maze;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMaze();
+  }
+
+  Future<void> _loadMaze() async {
+    try {
+      _maze = await Maze.fromAsset(widget.csvPath);
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Error loading maze: $e';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+      );
+    }
+
+    if (_maze == null) {
+      return const Center(child: Text('No maze data loaded'));
+    }
+
+    return Column(
+      children: [
+        // Maze with path overlay
+        PathOverlayWidget(
+          maze: _maze!,
+          tileSize: widget.tileSize,
+        ),
+      ],
+    );
+  }
+}
+
+/// Widget for displaying and managing the user's path overlay
+class PathOverlayWidget extends StatefulWidget {
+  final Maze maze;
+  final double tileSize;
+
+  const PathOverlayWidget({
+    super.key,
+    required this.maze,
+    required this.tileSize,
+  });
+
+  @override
+  State<PathOverlayWidget> createState() => _PathOverlayWidgetState();
+}
+
+class _PathOverlayWidgetState extends State<PathOverlayWidget> {
+  late MazePath _mazePath;
+
+  @override
+  void initState() {
+    super.initState();
+    _mazePath = MazePath.fromMaze(widget.maze);
+  }
+
+  void _handleTap(Offset localPosition) {
+    // Convert screen position to maze coordinates
+    final row = (localPosition.dy / widget.tileSize).floor();
+    final col = (localPosition.dx / widget.tileSize).floor();
+    final location = MazeLocation(row: row, col: col);
+
+    // Try to move to the new location
+    final newPath = _mazePath.moveToLocation(location);
+    if (newPath != null) {
+      setState(() {
+        _mazePath = newPath;
+      });
+    }
+  }
+
+  void _clearPath() {
+    setState(() {
+      _mazePath = MazePath.fromMaze(widget.maze);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Controls
+        Row(
+          children: [
+            ElevatedButton(
+              onPressed: _clearPath,
+              child: const Text('Clear Path'),
+            ),
+            const SizedBox(width: 8),
+            Text('Steps: ${_mazePath.pathLength}, Coins: ${_mazePath.coinsCollected}'),
+          ],
+        ),
+        const SizedBox(height: 8),
+        
+        // Maze with path overlay
+        GestureDetector(
+          onTapDown: (details) => _handleTap(details.localPosition),
+          child: Stack(
+            children: [
+              // Background maze tiles
+              CsvMazeWidget(
+                maze: widget.maze,
+                tileSize: widget.tileSize,
+              ),
+              
+              // Path rendering
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: PathPainter(
+                    mazePath: _mazePath,
+                    tileSize: widget.tileSize,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Painter for drawing the user's path
+class PathPainter extends CustomPainter {
+  final MazePath mazePath;
+  final double tileSize;
+
+  PathPainter({
+    required this.mazePath,
+    required this.tileSize,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = mazePath.userPath;
+    if (path.isEmpty) return;
+
+    // Paint for the path line
+    final linePaint = Paint()
+      ..color = Colors.blue.withOpacity(0.6)
+      ..strokeWidth = 4.0
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    // Paint for the dots at each point
+    final dotPaint = Paint()
+      ..color = Colors.blue
+      ..style = PaintingStyle.fill;
+
+    // Draw lines connecting path points
+    for (int i = 0; i < path.length - 1; i++) {
+      final start = _getTileCenter(path[i]);
+      final end = _getTileCenter(path[i + 1]);
+      canvas.drawLine(start, end, linePaint);
+    }
+
+    // Draw dots at each point
+    for (final location in path) {
+      final center = _getTileCenter(location);
+      canvas.drawCircle(center, 6.0, dotPaint);
+    }
+
+    // Highlight the latest point
+    if (path.isNotEmpty) {
+      final lastCenter = _getTileCenter(path.last);
+      final highlightPaint = Paint()
+        ..color = Colors.yellow
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(lastCenter, 8.0, highlightPaint);
+    }
+  }
+
+  Offset _getTileCenter(MazeLocation location) {
+    return Offset(
+      location.col * tileSize + tileSize / 2,
+      location.row * tileSize + tileSize / 2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(PathPainter oldDelegate) {
+    return oldDelegate.mazePath != mazePath || oldDelegate.tileSize != tileSize;
+  }
+}

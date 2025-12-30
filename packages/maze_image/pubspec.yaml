@@ -1,0 +1,16 @@
+name: maze_image
+description: Utilities for converting maze data structures and solutions into images.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.10.1
+
+dependencies:
+  image: ^4.3.0
+  maze:
+    path: ../maze
+
+dev_dependencies:
+  lints: ^5.0.0
+  test: ^1.25.0
