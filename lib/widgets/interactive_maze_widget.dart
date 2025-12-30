@@ -89,11 +89,30 @@ class PathOverlayWidget extends StatefulWidget {
 
 class _PathOverlayWidgetState extends State<PathOverlayWidget> {
   late MazePath _mazePath;
+  MazeLocation? _hoveredLocation;
 
   @override
   void initState() {
     super.initState();
     _mazePath = MazePath.fromMaze(widget.maze);
+  }
+
+  void _handleHover(Offset localPosition) {
+    final row = (localPosition.dy / widget.tileSize).floor();
+    final col = (localPosition.dx / widget.tileSize).floor();
+    final location = MazeLocation(row: row, col: col);
+
+    if (_hoveredLocation != location) {
+      setState(() {
+        _hoveredLocation = location;
+      });
+    }
+  }
+
+  void _handleExit(PointerEvent event) {
+    setState(() {
+      _hoveredLocation = null;
+    });
   }
 
   void _handleTap(Offset localPosition) {
@@ -135,26 +154,34 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
         const SizedBox(height: 8),
         
         // Maze with path overlay
-        GestureDetector(
-          onTapDown: (details) => _handleTap(details.localPosition),
-          child: Stack(
-            children: [
-              // Background maze tiles
-              CsvMazeWidget(
-                maze: widget.maze,
-                tileSize: widget.tileSize,
-              ),
-              
-              // Path rendering
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: PathPainter(
-                    mazePath: _mazePath,
-                    tileSize: widget.tileSize,
+        MouseRegion(
+          onHover: (event) => _handleHover(event.localPosition),
+          onExit: _handleExit,
+          cursor: _hoveredLocation != null && 
+                  _mazePath.isLocationAllowed(_hoveredLocation!)
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
+          child: GestureDetector(
+            onTapDown: (details) => _handleTap(details.localPosition),
+            child: Stack(
+              children: [
+                // Background maze tiles
+                CsvMazeWidget(
+                  maze: widget.maze,
+                  tileSize: widget.tileSize,
+                ),
+                
+                // Path rendering
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: PathPainter(
+                      mazePath: _mazePath,
+                      tileSize: widget.tileSize,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

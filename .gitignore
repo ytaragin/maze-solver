@@ -46,8 +46,22 @@ app.*.map.json
 # Web related
 /web/.dart_tool/
 
+# Generated plugin registrants
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+**/GeneratedPluginRegistrant.swift
+
+# Package lock files (for sub-packages, not root)
+packages/**/pubspec.lock
+
 # Project-specific
 *.png
 *.csv
 *.sol
 sol.txt
+
+# Keep tile assets
+!tiles/*.png
+
+# Keep example mazes (optional - you can remove this if you don't want them tracked)
+!mazes/*.csv
