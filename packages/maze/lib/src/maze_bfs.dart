@@ -1,6 +1,5 @@
 import 'dart:collection';
 import 'package:maze/maze.dart';
-import 'maze_path.dart';
 
 /// Result of a BFS traversal from start to end node.
 class BfsResult {

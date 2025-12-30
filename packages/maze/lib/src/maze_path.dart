@@ -49,7 +49,7 @@ class PathState {
       path: [...path, newNode],
     );
   }
-  
+
   /// Verifies if a move from currentState to neighborNode is legal according to maze rules.
   ///
   /// Returns a tuple containing:
@@ -63,9 +63,7 @@ class PathState {
 
     switch (neighborNode.tile.type) {
       case SpotType.cent:
-        final coinsSpent = path.contains(neighborNode)
-            ? 0
-            : -1;
+        final coinsSpent = path.contains(neighborNode) ? 0 : -1;
         return (true, coinsSpent);
       case SpotType.wall:
         return (false, 0);
@@ -81,21 +79,14 @@ class PathState {
     }
   }
 
-
-
-
   /// Returns a list of allowed neighboring nodes and the coins needed to reach them.
   /// Each entry is a tuple of (neighbor node, coins spent).
   List<(MazeNode, int)> getAllowedNeighbors() {
     final allowedNeighbors = <(MazeNode, int)>[];
-    
+
     for (final neighbor in node.neighbors) {
       if (!visitedEdges.contains(
-        EdgeVisit(
-          node.location,
-          neighbor.location,
-          coinsCollected,
-        ),
+        EdgeVisit(node.location, neighbor.location, coinsCollected),
       )) {
         // Verify if this move is legal according to maze rules
         final (isLegal, coinsSpent) = _verifyMazeRules(neighbor);
@@ -105,8 +96,47 @@ class PathState {
         }
       }
     }
-    
+
     return allowedNeighbors;
+  }
+
+  /// Returns a list of all nodes reachable from the current node without branching.
+  ///
+  /// Starting from the current node, this follows each path until it reaches:
+  /// - A dead end (no further neighbors)
+  /// - A branch point (multiple neighbors, excluding the path we came from)
+  ///
+  /// Returns a list where each element is a list of nodes representing one non-branching path.
+  List<List<MazeNode>> getDirectReachableNeighbors() {
+    final result = <List<MazeNode>>[];
+    final initialNeighbors = getAllowedNeighbors();
+
+    for (final (neighbor, coinsDelta) in initialNeighbors) {
+      final path = <MazeNode>[neighbor];
+      var currentState = next(coinsDelta: coinsDelta, newNode: neighbor);
+
+      while (true) {
+        // Get all allowed neighbors from the current state
+        final allowedNeighbors = currentState.getAllowedNeighbors();
+
+        // If there's exactly one neighbor, continue following the path
+        if (allowedNeighbors.length == 1) {
+          final (nextNode, nextCoinsDelta) = allowedNeighbors.first;
+          currentState = currentState.next(
+            coinsDelta: nextCoinsDelta,
+            newNode: nextNode,
+          );
+          path.add(nextNode);
+        } else {
+          // Either a dead end (0 neighbors) or a branch (2+ neighbors) - stop here
+          break;
+        }
+      }
+
+      result.add(path);
+    }
+
+    return result;
   }
 
   @override
