@@ -3,13 +3,18 @@ import 'package:flutter/services.dart';
 import 'dart:ui' as ui;
 import 'package:maze/maze.dart';
 import '../models/maze.dart';
+import '../utils/maze_coordinates.dart';
 
 /// CSV-based Maze Widget that displays tiles
 class CsvMazeWidget extends StatefulWidget {
   final Maze maze;
-  final double tileSize;
+  final MazeCoordinates coordinates;
 
-  const CsvMazeWidget({super.key, required this.maze, this.tileSize = 32.0});
+  const CsvMazeWidget({
+    super.key, 
+    required this.maze, 
+    required this.coordinates,
+  });
 
   @override
   State<CsvMazeWidget> createState() => _CsvMazeWidgetState();
@@ -71,11 +76,11 @@ class _CsvMazeWidgetState extends State<CsvMazeWidget> {
     final cols = widget.maze.cols;
 
     return CustomPaint(
-      size: Size(cols * widget.tileSize, rows * widget.tileSize),
+      size: widget.coordinates.getMazeSize(rows, cols),
       painter: CsvMazePainter(
         maze: widget.maze,
         tileImages: _tileImages,
-        tileSize: widget.tileSize,
+        coordinates: widget.coordinates,
       ),
     );
   }
@@ -84,12 +89,12 @@ class _CsvMazeWidgetState extends State<CsvMazeWidget> {
 class CsvMazePainter extends CustomPainter {
   final Maze maze;
   final Map<int, ui.Image> tileImages;
-  final double tileSize;
+  final MazeCoordinates coordinates;
 
   CsvMazePainter({
     required this.maze,
     required this.tileImages,
-    required this.tileSize,
+    required this.coordinates,
   });
 
   @override
@@ -106,11 +111,13 @@ class CsvMazePainter extends CustomPainter {
             image.width.toDouble(),
             image.height.toDouble(),
           );
+          final location = MazeLocation(row: row, col: col);
+          final topLeft = coordinates.locationToTopLeft(location);
           final dstRect = Rect.fromLTWH(
-            col * tileSize,
-            row * tileSize,
-            tileSize,
-            tileSize,
+            topLeft.dx,
+            topLeft.dy,
+            coordinates.tileSize,
+            coordinates.tileSize,
           );
           canvas.drawImageRect(image, srcRect, dstRect, Paint());
         }
@@ -122,6 +129,6 @@ class CsvMazePainter extends CustomPainter {
   bool shouldRepaint(CsvMazePainter oldDelegate) {
     return oldDelegate.maze != maze ||
         oldDelegate.tileImages != tileImages ||
-        oldDelegate.tileSize != tileSize;
+        oldDelegate.coordinates != coordinates;
   }
 }

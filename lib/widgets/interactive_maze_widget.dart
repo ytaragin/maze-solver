@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:maze/maze.dart';
 import '../models/maze.dart';
 import '../models/maze_path.dart';
+import '../utils/maze_coordinates.dart';
 import 'csv_maze_widget.dart';
 
 /// Interactive Maze Widget with path building
@@ -89,18 +90,18 @@ class PathOverlayWidget extends StatefulWidget {
 
 class _PathOverlayWidgetState extends State<PathOverlayWidget> {
   late MazePath _mazePath;
+  late MazeCoordinates _coordinates;
   MazeLocation? _hoveredLocation;
 
   @override
   void initState() {
     super.initState();
     _mazePath = MazePath.fromMaze(widget.maze);
+    _coordinates = MazeCoordinates(tileSize: widget.tileSize);
   }
 
   void _handleHover(Offset localPosition) {
-    final row = (localPosition.dy / widget.tileSize).floor();
-    final col = (localPosition.dx / widget.tileSize).floor();
-    final location = MazeLocation(row: row, col: col);
+    final location = _coordinates.screenToLocation(localPosition);
 
     if (_hoveredLocation != location) {
       setState(() {
@@ -117,9 +118,7 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
 
   void _handleTap(Offset localPosition) {
     // Convert screen position to maze coordinates
-    final row = (localPosition.dy / widget.tileSize).floor();
-    final col = (localPosition.dx / widget.tileSize).floor();
-    final location = MazeLocation(row: row, col: col);
+    final location = _coordinates.screenToLocation(localPosition);
 
     // Try to move to the new location
     final newPath = _mazePath.moveToLocation(location);
@@ -153,7 +152,7 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
         ),
         const SizedBox(height: 8),
         
-        // Maze with path overlay
+        // Maze with path overlay - both use the same coordinate system
         MouseRegion(
           onHover: (event) => _handleHover(event.localPosition),
           onExit: _handleExit,
@@ -165,18 +164,18 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
             onTapDown: (details) => _handleTap(details.localPosition),
             child: Stack(
               children: [
-                // Background maze tiles
+                // Background maze tiles - defines the coordinate system
                 CsvMazeWidget(
                   maze: widget.maze,
-                  tileSize: widget.tileSize,
+                  coordinates: _coordinates,
                 ),
                 
-                // Path rendering
+                // Path rendering - uses the same coordinate system
                 Positioned.fill(
                   child: CustomPaint(
                     painter: PathPainter(
                       mazePath: _mazePath,
-                      tileSize: widget.tileSize,
+                      coordinates: _coordinates,
                     ),
                   ),
                 ),
@@ -192,11 +191,11 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
 /// Painter for drawing the user's path
 class PathPainter extends CustomPainter {
   final MazePath mazePath;
-  final double tileSize;
+  final MazeCoordinates coordinates;
 
   PathPainter({
     required this.mazePath,
-    required this.tileSize,
+    required this.coordinates,
   });
 
   @override
@@ -218,20 +217,20 @@ class PathPainter extends CustomPainter {
 
     // Draw lines connecting path points
     for (int i = 0; i < path.length - 1; i++) {
-      final start = _getTileCenter(path[i]);
-      final end = _getTileCenter(path[i + 1]);
+      final start = coordinates.locationToCenter(path[i]);
+      final end = coordinates.locationToCenter(path[i + 1]);
       canvas.drawLine(start, end, linePaint);
     }
 
     // Draw dots at each point
     for (final location in path) {
-      final center = _getTileCenter(location);
+      final center = coordinates.locationToCenter(location);
       canvas.drawCircle(center, 6.0, dotPaint);
     }
 
     // Highlight the latest point
     if (path.isNotEmpty) {
-      final lastCenter = _getTileCenter(path.last);
+      final lastCenter = coordinates.locationToCenter(path.last);
       final highlightPaint = Paint()
         ..color = Colors.yellow
         ..style = PaintingStyle.fill;
@@ -239,15 +238,8 @@ class PathPainter extends CustomPainter {
     }
   }
 
-  Offset _getTileCenter(MazeLocation location) {
-    return Offset(
-      location.col * tileSize + tileSize / 2,
-      location.row * tileSize + tileSize / 2,
-    );
-  }
-
   @override
   bool shouldRepaint(PathPainter oldDelegate) {
-    return oldDelegate.mazePath != mazePath || oldDelegate.tileSize != tileSize;
+    return oldDelegate.mazePath != mazePath || oldDelegate.coordinates != coordinates;
   }
 }
