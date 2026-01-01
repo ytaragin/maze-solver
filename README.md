@@ -33,6 +33,22 @@ flutter run -d linux      # Linux
 flutter run -d chrome     # Web browser
 ```
 
+### Building for Web Deployment
+
+To build the application for deployment to a website:
+
+```bash
+flutter build web
+```
+
+The build output will be in the `build/web/` directory, which contains all the HTML, CSS, and JavaScript files needed to run the app in a browser. You can deploy this folder to any static web hosting service (GitHub Pages, Netlify, Vercel, Firebase Hosting, etc.).
+
+If deploying to a subdirectory (e.g., `/maze`), use the `--base-href` flag:
+
+```bash
+flutter build web --base-href /maze/
+```
+
 ### Using the Command Line Tool
 
 The command-line `maze_tool` can load, analyze, solve, and render mazes from CSV files.

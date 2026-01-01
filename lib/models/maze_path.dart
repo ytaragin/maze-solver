@@ -15,12 +15,12 @@ class MazePath {
 
   /// Create a new MazePath from a Maze model
   /// Builds the graph and initializes the path at the start node
-  factory MazePath.fromMaze(Maze maze) {
+  factory MazePath.fromMaze(Maze maze ) {
     // Build the immutable graph from the maze array
     final graph = MazeGraph(maze.mazeArray);
     
     // Create initial path state at the start node
-    final pathState = PathState(node: graph.startNode);
+    final pathState = PathState(node: graph.startNode, allowLoops: true);
     
     return MazePath._(
       graph: graph,

@@ -58,12 +58,28 @@ class _InteractiveMazeWidgetState extends State<InteractiveMazeWidget> {
       return const Center(child: Text('No maze data loaded'));
     }
 
-    return Column(
+    return Stack(
       children: [
-        // Maze with path overlay
-        PathOverlayWidget(
-          maze: _maze!,
-          tileSize: widget.tileSize,
+        Column(
+          children: [
+            // Maze with path overlay
+            PathOverlayWidget(
+              maze: _maze!,
+              tileSize: widget.tileSize,
+            ),
+          ],
+        ),
+        // Version number
+        Positioned(
+          bottom: 8,
+          right: 8,
+          child: Text(
+            'v0.1.0',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
         ),
       ],
     );

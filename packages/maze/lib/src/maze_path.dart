@@ -24,6 +24,7 @@ class PathState {
   final int coinsCollected;
   final Set<EdgeVisit> visitedEdges;
   final List<MazeNode> path;
+  final bool allowLoops;
 
   PathState({
     required this.node,
@@ -31,6 +32,7 @@ class PathState {
     Set<MazeLocation>? visitedCoinLocations,
     Set<EdgeVisit>? visitedEdges,
     List<MazeNode>? path,
+    this.allowLoops = false,
   }) : visitedEdges = visitedEdges ?? {},
        path = path ?? [node];
 
@@ -47,6 +49,7 @@ class PathState {
         EdgeVisit(node.location, newNode.location, coinsCollected),
       },
       path: [...path, newNode],
+      allowLoops: allowLoops,
     );
   }
 
@@ -85,9 +88,12 @@ class PathState {
     final allowedNeighbors = <(MazeNode, int)>[];
 
     for (final neighbor in node.neighbors) {
-      if (!visitedEdges.contains(
+      // Skip visitedEdges check if allowLoops is true
+      final isEdgeVisited = !allowLoops && visitedEdges.contains(
         EdgeVisit(node.location, neighbor.location, coinsCollected),
-      )) {
+      );
+      
+      if (!isEdgeVisited) {
         // Verify if this move is legal according to maze rules
         final (isLegal, coinsSpent) = _verifyMazeRules(neighbor);
 

@@ -69,8 +69,6 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
     }
   }
 
-  bool get _isSuccess => _mazePath.hasReachedEnd();
-
   void _clearPath() {
     setState(() {
       _mazePath = MazePath.fromMaze(widget.maze);
@@ -162,35 +160,9 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
                         painter: PathPainter(
                           mazePath: _mazePath,
                           coordinates: _coordinates,
-                          isSuccess: _isSuccess,
                         ),
                       ),
                     ),
-                    
-                    // Success overlay
-                    if (_isSuccess)
-                      Positioned.fill(
-                        child: Container(
-                          color: Colors.black.withOpacity(0.3),
-                          child: const Center(
-                            child: Text(
-                              'SUCCESS!',
-                              style: TextStyle(
-                                fontSize: 48,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                                shadows: [
-                                  Shadow(
-                                    blurRadius: 10.0,
-                                    color: Colors.white,
-                                    offset: Offset(0, 0),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -206,12 +178,10 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
 class PathPainter extends CustomPainter {
   final MazePath mazePath;
   final MazeCoordinates coordinates;
-  final bool isSuccess;
 
   PathPainter({
     required this.mazePath,
     required this.coordinates,
-    this.isSuccess = false,
   });
 
   @override
@@ -219,19 +189,16 @@ class PathPainter extends CustomPainter {
     final path = mazePath.userPath;
     if (path.isEmpty) return;
 
-    // Choose colors based on success state
-    final pathColor = isSuccess ? Colors.green : Colors.blue;
-
     // Paint for the path line
     final linePaint = Paint()
-      ..color = pathColor.withOpacity(0.6)
+      ..color = Colors.blue.withOpacity(0.6)
       ..strokeWidth = 4.0
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
     // Paint for the dots at each point
     final dotPaint = Paint()
-      ..color = pathColor
+      ..color = Colors.blue
       ..style = PaintingStyle.fill;
 
     // Draw lines connecting path points
@@ -259,8 +226,6 @@ class PathPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(PathPainter oldDelegate) {
-    return oldDelegate.mazePath != mazePath || 
-           oldDelegate.coordinates != coordinates ||
-           oldDelegate.isSuccess != isSuccess;
+    return oldDelegate.mazePath != mazePath || oldDelegate.coordinates != coordinates;
   }
 }
