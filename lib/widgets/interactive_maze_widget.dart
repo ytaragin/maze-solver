@@ -1,26 +1,34 @@
 import 'package:flutter/material.dart';
 import '../models/maze.dart';
+import '../models/maze_path.dart';
+import '../utils/maze_coordinates.dart';
+import 'csv_maze_widget.dart';
 import 'path_overlay_widget.dart';
+import 'solution_layer.dart';
 
 /// Interactive Maze Widget with path building
-class InteractiveMazeWidget extends StatefulWidget {
+class InteractiveMaze extends StatefulWidget {
   final String csvPath;
   final double tileSize;
 
-  const InteractiveMazeWidget({
+  const InteractiveMaze({
     super.key,
     required this.csvPath,
     this.tileSize = 32.0,
   });
 
   @override
-  State<InteractiveMazeWidget> createState() => _InteractiveMazeWidgetState();
+  State<InteractiveMaze> createState() => _InteractiveMazeState();
 }
 
-class _InteractiveMazeWidgetState extends State<InteractiveMazeWidget> {
+class _InteractiveMazeState extends State<InteractiveMaze> {
   Maze? _maze;
   bool _isLoading = true;
   String? _errorMessage;
+  int _pathLength = 0;
+  int _coinsCollected = 0;
+  final GlobalKey<PathOverlayState> _pathOverlayKey = GlobalKey();
+  final GlobalKey<SolutionLayerState> _solutionLayerKey = GlobalKey();
 
   @override
   void initState() {
@@ -58,14 +66,54 @@ class _InteractiveMazeWidgetState extends State<InteractiveMazeWidget> {
       return const Center(child: Text('No maze data loaded'));
     }
 
+    final coordinates = MazeCoordinates(tileSize: widget.tileSize);
+
     return Stack(
       children: [
         Column(
           children: [
-            // Maze with path overlay
-            PathOverlayWidget(
-              maze: _maze!,
-              tileSize: widget.tileSize,
+            // Controls
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: () => _pathOverlayKey.currentState?.clearPath(),
+                  child: const Text('Clear Path'),
+                ),
+                const SizedBox(width: 8),
+                Text('Steps: $_pathLength, Coins: $_coinsCollected'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            
+            // Stack maze rendering with path overlay
+            Stack(
+              children: [
+                // Background maze tiles
+                CsvMaze(
+                  maze: _maze!,
+                  coordinates: coordinates,
+                ),
+                
+                // Path overlay with interaction
+                PathOverlay(
+                  key: _pathOverlayKey,
+                  maze: _maze!,
+                  coordinates: coordinates,
+                  onPathChanged: (path) {
+                    setState(() {
+                      _pathLength = path.pathLength;
+                      _coinsCollected = path.coinsCollected;
+                    });
+                  },
+                ),
+                
+                // Solution path overlay (drawn on top)
+                SolutionLayer(
+                  key: _solutionLayerKey,
+                  maze: _maze!,
+                  coordinates: coordinates,
+                ),
+              ],
             ),
           ],
         ),

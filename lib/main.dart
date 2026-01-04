@@ -63,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
             scrollDirection: Axis.vertical,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: InteractiveMazeWidget(
+              child: InteractiveMaze(
                 csvPath: 'mazes/maze251103v2.csv',
                 tileSize: 40.0,
               ),

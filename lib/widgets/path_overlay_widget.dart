@@ -4,26 +4,26 @@ import 'package:maze/maze.dart';
 import '../models/maze.dart';
 import '../models/maze_path.dart';
 import '../utils/maze_coordinates.dart';
-import 'csv_maze_widget.dart';
 
 /// Widget for displaying and managing the user's path overlay
-class PathOverlayWidget extends StatefulWidget {
+class PathOverlay extends StatefulWidget {
   final Maze maze;
-  final double tileSize;
+  final MazeCoordinates coordinates;
+  final ValueChanged<MazePath>? onPathChanged;
 
-  const PathOverlayWidget({
+  const PathOverlay({
     super.key,
     required this.maze,
-    required this.tileSize,
+    required this.coordinates,
+    this.onPathChanged,
   });
 
   @override
-  State<PathOverlayWidget> createState() => _PathOverlayWidgetState();
+  PathOverlayState createState() => PathOverlayState();
 }
 
-class _PathOverlayWidgetState extends State<PathOverlayWidget> {
+class PathOverlayState extends State<PathOverlay> {
   late MazePath _mazePath;
-  late MazeCoordinates _coordinates;
   MazeLocation? _hoveredLocation;
   final FocusNode _focusNode = FocusNode();
 
@@ -31,7 +31,6 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
   void initState() {
     super.initState();
     _mazePath = MazePath.fromMaze(widget.maze);
-    _coordinates = MazeCoordinates(tileSize: widget.tileSize);
   }
 
   @override
@@ -41,7 +40,7 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
   }
 
   void _handleHover(Offset localPosition) {
-    final location = _coordinates.screenToLocation(localPosition);
+    final location = widget.coordinates.screenToLocation(localPosition);
 
     if (_hoveredLocation != location) {
       setState(() {
@@ -58,7 +57,7 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
 
   void _handleTap(Offset localPosition) {
     // Convert screen position to maze coordinates
-    final location = _coordinates.screenToLocation(localPosition);
+    final location = widget.coordinates.screenToLocation(localPosition);
 
     // Try to move to the new location
     final newPath = _mazePath.moveToLocation(location);
@@ -66,13 +65,15 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
       setState(() {
         _mazePath = newPath;
       });
+      widget.onPathChanged?.call(_mazePath);
     }
   }
 
-  void _clearPath() {
+  void clearPath() {
     setState(() {
       _mazePath = MazePath.fromMaze(widget.maze);
     });
+    widget.onPathChanged?.call(_mazePath);
   }
 
   void _handleKeyPress(KeyEvent event) {
@@ -105,6 +106,7 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
           setState(() {
             _mazePath = newPath;
           });
+          widget.onPathChanged?.call(_mazePath);
         }
       }
     }
@@ -121,53 +123,23 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
       },
       child: GestureDetector(
         onTap: () => _focusNode.requestFocus(),
-        child: Column(
-          children: [
-            // Controls
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: _clearPath,
-                  child: const Text('Clear Path'),
-                ),
-                const SizedBox(width: 8),
-                Text('Steps: ${_mazePath.pathLength}, Coins: ${_mazePath.coinsCollected}'),
-              ],
-            ),
-            const SizedBox(height: 8),
-            
-            // Maze with path overlay - both use the same coordinate system
-            MouseRegion(
-              onHover: (event) => _handleHover(event.localPosition),
-              onExit: _handleExit,
-              cursor: _hoveredLocation != null && 
-                      _mazePath.isLocationAllowed(_hoveredLocation!)
-                  ? SystemMouseCursors.click
-                  : SystemMouseCursors.basic,
-              child: GestureDetector(
-                onTapDown: (details) => _handleTap(details.localPosition),
-                child: Stack(
-                  children: [
-                    // Background maze tiles - defines the coordinate system
-                    CsvMazeWidget(
-                      maze: widget.maze,
-                      coordinates: _coordinates,
-                    ),
-                    
-                    // Path rendering - uses the same coordinate system
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: PathPainter(
-                          mazePath: _mazePath,
-                          coordinates: _coordinates,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+        child: MouseRegion(
+          onHover: (event) => _handleHover(event.localPosition),
+          onExit: _handleExit,
+          cursor: _hoveredLocation != null && 
+                  _mazePath.isLocationAllowed(_hoveredLocation!)
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
+          child: GestureDetector(
+            onTapDown: (details) => _handleTap(details.localPosition),
+            child: CustomPaint(
+              size: widget.coordinates.getMazeSize(widget.maze.mazeArray.rows, widget.maze.mazeArray.cols),
+              painter: PathPainter(
+                mazePath: _mazePath,
+                coordinates: widget.coordinates,
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -178,10 +150,14 @@ class _PathOverlayWidgetState extends State<PathOverlayWidget> {
 class PathPainter extends CustomPainter {
   final MazePath mazePath;
   final MazeCoordinates coordinates;
+  final Color pathColor;
+  final Color highlightColor;
 
   PathPainter({
     required this.mazePath,
     required this.coordinates,
+    this.pathColor = Colors.blue,
+    this.highlightColor = Colors.yellow,
   });
 
   @override
@@ -191,14 +167,14 @@ class PathPainter extends CustomPainter {
 
     // Paint for the path line
     final linePaint = Paint()
-      ..color = Colors.blue.withOpacity(0.6)
+      ..color = pathColor.withOpacity(0.6)
       ..strokeWidth = 4.0
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
     // Paint for the dots at each point
     final dotPaint = Paint()
-      ..color = Colors.blue
+      ..color = pathColor
       ..style = PaintingStyle.fill;
 
     // Draw lines connecting path points
@@ -218,7 +194,7 @@ class PathPainter extends CustomPainter {
     if (path.isNotEmpty) {
       final lastCenter = coordinates.locationToCenter(path.last);
       final highlightPaint = Paint()
-        ..color = Colors.yellow
+        ..color = highlightColor
         ..style = PaintingStyle.fill;
       canvas.drawCircle(lastCenter, 8.0, highlightPaint);
     }
@@ -226,6 +202,9 @@ class PathPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(PathPainter oldDelegate) {
-    return oldDelegate.mazePath != mazePath || oldDelegate.coordinates != coordinates;
+    return oldDelegate.mazePath != mazePath || 
+           oldDelegate.coordinates != coordinates ||
+           oldDelegate.pathColor != pathColor ||
+           oldDelegate.highlightColor != highlightColor;
   }
 }

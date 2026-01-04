@@ -6,21 +6,21 @@ import '../models/maze.dart';
 import '../utils/maze_coordinates.dart';
 
 /// CSV-based Maze Widget that displays tiles
-class CsvMazeWidget extends StatefulWidget {
+class CsvMaze extends StatefulWidget {
   final Maze maze;
   final MazeCoordinates coordinates;
 
-  const CsvMazeWidget({
+  const CsvMaze({
     super.key, 
     required this.maze, 
     required this.coordinates,
   });
 
   @override
-  State<CsvMazeWidget> createState() => _CsvMazeWidgetState();
+  State<CsvMaze> createState() => _CsvMazeState();
 }
 
-class _CsvMazeWidgetState extends State<CsvMazeWidget> {
+class _CsvMazeState extends State<CsvMaze> {
   Map<int, ui.Image> _tileImages = {};
   bool _isLoading = true;
   String? _errorMessage;
