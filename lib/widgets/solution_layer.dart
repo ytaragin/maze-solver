@@ -21,26 +21,54 @@ class SolutionLayer extends StatefulWidget {
 }
 
 class SolutionLayerState extends State<SolutionLayer> {
-  MazePath? _solutionPath;
+  late List<MazeLocation> _solutionPath;
+  int _depth = 1;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Generate solution path here
+    generateSolution();
+
   }
 
   void generateSolution() {
-    // TODO: Implement solution generation logic
-    // This will use the maze to find the solution path
     setState(() {
-      // _solutionPath = ...
+      final graph = widget.maze.graph;
+      final solver = MazeShortestPath(graph);
+      final res = solver.findPath();
+      if (res.pathFound) {
+        _solutionPath = res.path;
+      } else {
+        _solutionPath = [];
+      }
+    });
+  }
+
+  void setFullPath() {
+    setState(() {
+      _depth = _solutionPath.length;
+    });
+  }
+
+  void advanceStep() {
+    setState(() {
+      if (_depth < _solutionPath.length) {
+        _depth++;
+      }
     });
   }
 
   void clearSolution() {
     setState(() {
-      _solutionPath = null;
+      _depth = 1;
     });
+  }
+
+  List<MazeLocation> getSolutionPath() {
+    if (_depth < 0 || _depth > _solutionPath.length) {
+      return _solutionPath;
+    }
+    return _solutionPath.sublist(0, _depth);
   }
 
   @override
@@ -51,14 +79,12 @@ class SolutionLayerState extends State<SolutionLayer> {
           widget.maze.mazeArray.rows,
           widget.maze.mazeArray.cols,
         ),
-        painter: _solutionPath != null
-            ? PathPainter(
-                mazePath: _solutionPath!,
-                coordinates: widget.coordinates,
-                pathColor: Colors.green,
-                highlightColor: Colors.lightGreen,
-              )
-            : null,
+        painter: PathPainter(
+          path: getSolutionPath(),
+          coordinates: widget.coordinates,
+          pathColor: Colors.green,
+          highlightColor: Colors.lightGreen,
+        ),
       ),
     );
   }

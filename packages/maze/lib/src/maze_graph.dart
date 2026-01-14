@@ -1,8 +1,5 @@
 import 'package:maze/maze.dart';
 
-import 'tiles.dart';
-import 'maze_array.dart';
-import 'spot_type.dart';
 
 class MazeNode {
   final MazeLocation location;

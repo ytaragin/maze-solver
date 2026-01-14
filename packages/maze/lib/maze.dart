@@ -1,5 +1,5 @@
 /// Maze package for loading and managing tile-based mazes.
-library maze;
+library;
 
 export 'src/maze_array.dart';
 export 'src/tiles.dart';

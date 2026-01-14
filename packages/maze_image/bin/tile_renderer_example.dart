@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:maze_image/maze_image.dart';
 
 void main() {

@@ -135,7 +135,7 @@ class PathOverlayState extends State<PathOverlay> {
             child: CustomPaint(
               size: widget.coordinates.getMazeSize(widget.maze.mazeArray.rows, widget.maze.mazeArray.cols),
               painter: PathPainter(
-                mazePath: _mazePath,
+                path: _mazePath.userPath,
                 coordinates: widget.coordinates,
               ),
             ),
@@ -148,13 +148,13 @@ class PathOverlayState extends State<PathOverlay> {
 
 /// Painter for drawing the user's path
 class PathPainter extends CustomPainter {
-  final MazePath mazePath;
+  final List<MazeLocation> path;
   final MazeCoordinates coordinates;
   final Color pathColor;
   final Color highlightColor;
 
   PathPainter({
-    required this.mazePath,
+    required this.path,
     required this.coordinates,
     this.pathColor = Colors.blue,
     this.highlightColor = Colors.yellow,
@@ -162,7 +162,6 @@ class PathPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final path = mazePath.userPath;
     if (path.isEmpty) return;
 
     // Paint for the path line
@@ -202,7 +201,7 @@ class PathPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(PathPainter oldDelegate) {
-    return oldDelegate.mazePath != mazePath || 
+    return oldDelegate.path != path || 
            oldDelegate.coordinates != coordinates ||
            oldDelegate.pathColor != pathColor ||
            oldDelegate.highlightColor != highlightColor;

@@ -21,7 +21,7 @@ class CsvMaze extends StatefulWidget {
 }
 
 class _CsvMazeState extends State<CsvMaze> {
-  Map<int, ui.Image> _tileImages = {};
+  final Map<int, ui.Image> _tileImages = {};
   bool _isLoading = true;
   String? _errorMessage;
 

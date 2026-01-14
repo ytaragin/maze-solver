@@ -5,11 +5,14 @@ import 'package:maze/maze_flutter.dart';
 class Maze {
   final MazeArray mazeArray;
   final String csvPath;
+  late final MazeGraph graph;
 
   Maze({
     required this.mazeArray,
     required this.csvPath,
-  });
+  }) {
+    graph = MazeGraph(mazeArray);
+  }
 
   /// Load maze from asset path
   static Future<Maze> fromAsset(String csvPath) async {
@@ -43,78 +46,69 @@ class Maze {
         location.col < cols;
   }
 
-  /// Check if a tile is walkable (not a wall)
-  bool isWalkable(MazeLocation location) {
-    if (!isValidLocation(location)) return false;
-    final tile = getTileAt(location);
-    // TODO: Define walkable logic based on tile type
-    // For now, assume all non-wall tiles are walkable
-    return tile.type != SpotType.wall;
-  }
+  // /// Check if a tile is walkable (not a wall)
+  // bool isWalkable(MazeLocation location) {
+  //   if (!isValidLocation(location)) return false;
+  //   final tile = getTileAt(location);
+  //   // TODO: Define walkable logic based on tile type
+  //   // For now, assume all non-wall tiles are walkable
+  //   return tile.type != SpotType.wall;
+  // }
 
-  /// Get neighboring positions
-  List<MazeLocation> getNeighbors(MazeLocation location) {
-    final neighbors = <MazeLocation>[];
-    final directions = [
-      MazeLocation(row: location.row - 1, col: location.col), // North
-      MazeLocation(row: location.row + 1, col: location.col), // South
-      MazeLocation(row: location.row, col: location.col - 1), // West
-      MazeLocation(row: location.row, col: location.col + 1), // East
-    ];
+  // /// Get neighboring positions using the graph
+  // List<MazeLocation> getNeighbors(MazeLocation location) {
+  //   final node = graph.getNode(location);
+  //   if (node == null) return [];
+    
+  //   return node.neighbors.map((neighbor) => neighbor.location).toList();
+  // }
 
-    for (final neighbor in directions) {
-      if (isValidLocation(neighbor)) {
-        neighbors.add(neighbor);
-      }
-    }
+  // /// Check if two locations are adjacent (including diagonals)
+  // bool areAdjacent(MazeLocation a, MazeLocation b) {
+  //   final rowDiff = (a.row - b.row).abs();
+  //   final colDiff = (a.col - b.col).abs();
+  //   return (rowDiff <= 1 && colDiff <= 1) && (rowDiff + colDiff > 0);
+  // }
+// 
+  // /// Check if two locations are connected in the graph (can move between them)
+  // bool areOrthogonallyAdjacent(MazeLocation a, MazeLocation b) {
+  //   final nodeA = graph.getNode(a);
+  //   if (nodeA == null) return false;
+    
+  //   // Check if b is in nodeA's neighbors
+  //   return nodeA.neighbors.any((neighbor) => neighbor.location == b);
+  // }
 
-    return neighbors;
-  }
+  // /// Validate a path through the maze
+  // bool isValidPath(List<MazeLocation> path) {
+  //   if (path.isEmpty) return false;
 
-  /// Check if two locations are adjacent (including diagonals)
-  bool areAdjacent(MazeLocation a, MazeLocation b) {
-    final rowDiff = (a.row - b.row).abs();
-    final colDiff = (a.col - b.col).abs();
-    return (rowDiff <= 1 && colDiff <= 1) && (rowDiff + colDiff > 0);
-  }
+  //   // Check if path starts at start position
+  //   final start = startLocation;
+  //   if (path.first != start) {
+  //     return false;
+  //   }
 
-  /// Check if two locations are orthogonally adjacent (no diagonals)
-  bool areOrthogonallyAdjacent(MazeLocation a, MazeLocation b) {
-    final rowDiff = (a.row - b.row).abs();
-    final colDiff = (a.col - b.col).abs();
-    return (rowDiff == 1 && colDiff == 0) || (rowDiff == 0 && colDiff == 1);
-  }
+  //   // Check each step is adjacent and walkable
+  //   for (int i = 0; i < path.length; i++) {
+  //     if (!isWalkable(path[i])) {
+  //       return false;
+  //     }
 
-  /// Validate a path through the maze
-  bool isValidPath(List<MazeLocation> path) {
-    if (path.isEmpty) return false;
+  //     if (i > 0 && !areOrthogonallyAdjacent(path[i - 1], path[i])) {
+  //       return false;
+  //     }
+  //   }
 
-    // Check if path starts at start position
-    final start = startLocation;
-    if (path.first != start) {
-      return false;
-    }
+  //   return true;
+  // }
 
-    // Check each step is adjacent and walkable
-    for (int i = 0; i < path.length; i++) {
-      if (!isWalkable(path[i])) {
-        return false;
-      }
-
-      if (i > 0 && !areOrthogonallyAdjacent(path[i - 1], path[i])) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /// Check if path reaches the end
-  bool isPathComplete(List<MazeLocation> path) {
-    if (path.isEmpty) return false;
-    final end = endLocation;
-    return end != null && path.last == end;
-  }
+  // /// Check if path reaches the end
+  // bool isPathComplete(List<MazeLocation> path) {
+  //   if (path.isEmpty) return false;
+  //   final end = endLocation;
+  //   return end != null && path.last == end;
+  // }
 
   @override
   String toString() => 'Maze($rows x $cols, path: $csvPath)';

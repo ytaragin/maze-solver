@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/maze.dart';
-import '../models/maze_path.dart';
 import '../utils/maze_coordinates.dart';
 import 'csv_maze_widget.dart';
 import 'path_overlay_widget.dart';
@@ -80,6 +79,21 @@ class _InteractiveMazeState extends State<InteractiveMaze> {
                   child: const Text('Clear Path'),
                 ),
                 const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => _solutionLayerKey.currentState?.advanceStep(),
+                  child: const Text('Advance Solution'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => _solutionLayerKey.currentState?.setFullPath(),
+                  child: const Text('Full Solution'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => _solutionLayerKey.currentState?.clearSolution(),
+                  child: const Text('Clear Solution'),
+                ),
+                const SizedBox(width: 8),
                 Text('Steps: $_pathLength, Coins: $_coinsCollected'),
               ],
             ),
@@ -94,7 +108,14 @@ class _InteractiveMazeState extends State<InteractiveMaze> {
                   coordinates: coordinates,
                 ),
                 
-                // Path overlay with interaction
+                // Solution path overlay
+                SolutionLayer(
+                  key: _solutionLayerKey,
+                  maze: _maze!,
+                  coordinates: coordinates,
+                ),
+                
+                // Path overlay with interaction (drawn on top)
                 PathOverlay(
                   key: _pathOverlayKey,
                   maze: _maze!,
@@ -105,13 +126,6 @@ class _InteractiveMazeState extends State<InteractiveMaze> {
                       _coinsCollected = path.coinsCollected;
                     });
                   },
-                ),
-                
-                // Solution path overlay (drawn on top)
-                SolutionLayer(
-                  key: _solutionLayerKey,
-                  maze: _maze!,
-                  coordinates: coordinates,
                 ),
               ],
             ),

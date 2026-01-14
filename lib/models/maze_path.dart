@@ -14,10 +14,10 @@ class MazePath {
   }) : userPath = userPath ?? [];
 
   /// Create a new MazePath from a Maze model
-  /// Builds the graph and initializes the path at the start node
+  /// Uses the maze's existing graph and initializes the path at the start node
   factory MazePath.fromMaze(Maze maze ) {
-    // Build the immutable graph from the maze array
-    final graph = MazeGraph(maze.mazeArray);
+    // Use the maze's graph instead of creating a new one
+    final graph = maze.graph;
     
     // Create initial path state at the start node
     final pathState = PathState(node: graph.startNode, allowLoops: true);
