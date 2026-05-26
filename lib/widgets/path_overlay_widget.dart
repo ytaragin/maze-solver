@@ -24,6 +24,7 @@ class PathOverlay extends StatefulWidget {
 
 class PathOverlayState extends State<PathOverlay> {
   late MazePath _mazePath;
+  final List<MazePath> _history = [];
   MazeLocation? _hoveredLocation;
   final FocusNode _focusNode = FocusNode();
 
@@ -63,6 +64,7 @@ class PathOverlayState extends State<PathOverlay> {
     final newPath = _mazePath.moveToLocation(location);
     if (newPath != null) {
       setState(() {
+        _history.add(_mazePath);
         _mazePath = newPath;
       });
       widget.onPathChanged?.call(_mazePath);
@@ -72,12 +74,27 @@ class PathOverlayState extends State<PathOverlay> {
   void clearPath() {
     setState(() {
       _mazePath = MazePath.fromMaze(widget.maze);
+      _history.clear();
+    });
+    widget.onPathChanged?.call(_mazePath);
+  }
+
+  void _undoLastMove() {
+    if (_history.isEmpty) return;
+    setState(() {
+      _mazePath = _history.removeLast();
     });
     widget.onPathChanged?.call(_mazePath);
   }
 
   void _handleKeyPress(KeyEvent event) {
     if (event is! KeyDownEvent) return;
+
+    // Handle backspace for undo
+    if (event.logicalKey == LogicalKeyboardKey.backspace) {
+      _undoLastMove();
+      return;
+    }
 
     Direction? direction;
     
@@ -104,6 +121,7 @@ class PathOverlayState extends State<PathOverlay> {
         final newPath = _mazePath.moveToLocation(targetLocation);
         if (newPath != null) {
           setState(() {
+            _history.add(_mazePath);
             _mazePath = newPath;
           });
           widget.onPathChanged?.call(_mazePath);

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maze/maze.dart';
 import '../models/maze.dart';
-import '../models/maze_path.dart';
 import '../utils/maze_coordinates.dart';
 import 'path_overlay_widget.dart';
 
