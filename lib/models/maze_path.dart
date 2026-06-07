@@ -14,18 +14,19 @@ class MazePath {
   }) : userPath = userPath ?? [];
 
   /// Create a new MazePath from a Maze model
-  /// Uses the maze's existing graph and initializes the path at the start node
-  factory MazePath.fromMaze(Maze maze ) {
-    // Use the maze's graph instead of creating a new one
+  /// Uses the maze's existing graph and initializes the path at the start node.
+  /// The maze must be valid (has start and end tiles).
+  factory MazePath.fromMaze(Maze maze) {
+    assert(maze.isValid, 'Cannot create MazePath from an invalid maze');
     final graph = maze.graph;
     
     // Create initial path state at the start node
-    final pathState = PathState(node: graph.startNode, allowLoops: true);
+    final pathState = PathState(node: graph.startNode!, allowLoops: true);
     
     return MazePath._(
       graph: graph,
       pathState: pathState,
-      userPath: [graph.startNode.location],
+      userPath: [graph.startNode!.location],
     );
   }
 

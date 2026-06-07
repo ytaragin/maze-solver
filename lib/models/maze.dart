@@ -6,12 +6,32 @@ class Maze {
   final MazeArray mazeArray;
   final String csvPath;
   late final MazeGraph graph;
+  late final bool isValid;
 
   Maze({
     required this.mazeArray,
     required this.csvPath,
   }) {
+    isValid = _checkValidity();
     graph = MazeGraph(mazeArray);
+  }
+
+  bool _checkValidity() {
+    return mazeArray.getStartLocation() != null &&
+        mazeArray.getNodesByType(SpotType.end) != null;
+  }
+
+  /// Create a maze from a 2D array of tile IDs.
+  /// Null entries are replaced with [defaultTileId].
+  factory Maze.fromTileIds(List<List<int?>> tileIds, {int defaultTileId = 1}) {
+    final tileManager = TileManager.withVariants();
+    final tiles = tileIds
+        .map((row) => row
+            .map((id) => tileManager.getTile(id ?? defaultTileId))
+            .toList())
+        .toList();
+    final mazeArray = MazeArray(tiles: tiles);
+    return Maze(mazeArray: mazeArray, csvPath: 'created');
   }
 
   /// Load maze from asset path
@@ -35,7 +55,7 @@ class Maze {
   Set<Tile> getUniqueTiles() => mazeArray.getUniqueTiles();
 
   /// Find start and end positions
-  MazeLocation get startLocation => mazeArray.getStartLocation();
+  MazeLocation? get startLocation => mazeArray.getStartLocation();
   MazeLocation? get endLocation => mazeArray.getNodesByType(SpotType.end);
 
   /// Check if a position is valid (within bounds)

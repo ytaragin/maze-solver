@@ -74,27 +74,31 @@ class _InteractiveMazeState extends State<InteractiveMaze> {
             // Controls
             Row(
               children: [
-                ElevatedButton(
-                  onPressed: () => _pathOverlayKey.currentState?.clearPath(),
-                  child: const Text('Clear Path'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => _solutionLayerKey.currentState?.advanceStep(),
-                  child: const Text('Advance Solution'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => _solutionLayerKey.currentState?.setFullPath(),
-                  child: const Text('Full Solution'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => _solutionLayerKey.currentState?.clearSolution(),
-                  child: const Text('Clear Solution'),
-                ),
-                const SizedBox(width: 8),
-                Text('Steps: $_pathLength, Coins: $_coinsCollected'),
+                if (_maze!.isValid) ...[
+                  ElevatedButton(
+                    onPressed: () => _pathOverlayKey.currentState?.clearPath(),
+                    child: const Text('Clear Path'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _solutionLayerKey.currentState?.advanceStep(),
+                    child: const Text('Advance Solution'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _solutionLayerKey.currentState?.setFullPath(),
+                    child: const Text('Full Solution'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _solutionLayerKey.currentState?.clearSolution(),
+                    child: const Text('Clear Solution'),
+                  ),
+                  const SizedBox(width: 8),
+                  Text('Steps: $_pathLength, Coins: $_coinsCollected'),
+                ] else ...[
+                  const Text('Maze is not solvable (missing start or end tile)'),
+                ],
               ],
             ),
             const SizedBox(height: 8),
@@ -108,25 +112,27 @@ class _InteractiveMazeState extends State<InteractiveMaze> {
                   coordinates: coordinates,
                 ),
                 
-                // Solution path overlay
-                SolutionLayer(
-                  key: _solutionLayerKey,
-                  maze: _maze!,
-                  coordinates: coordinates,
-                ),
-                
-                // Path overlay with interaction (drawn on top)
-                PathOverlay(
-                  key: _pathOverlayKey,
-                  maze: _maze!,
-                  coordinates: coordinates,
-                  onPathChanged: (path) {
-                    setState(() {
-                      _pathLength = path.pathLength;
-                      _coinsCollected = path.coinsCollected;
-                    });
-                  },
-                ),
+                if (_maze!.isValid) ...[
+                  // Solution path overlay
+                  SolutionLayer(
+                    key: _solutionLayerKey,
+                    maze: _maze!,
+                    coordinates: coordinates,
+                  ),
+                  
+                  // Path overlay with interaction (drawn on top)
+                  PathOverlay(
+                    key: _pathOverlayKey,
+                    maze: _maze!,
+                    coordinates: coordinates,
+                    onPathChanged: (path) {
+                      setState(() {
+                        _pathLength = path.pathLength;
+                        _coinsCollected = path.coinsCollected;
+                      });
+                    },
+                  ),
+                ],
               ],
             ),
           ],

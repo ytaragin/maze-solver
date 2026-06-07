@@ -118,11 +118,25 @@ void displayMazeInfo(MazeArray maze) {
 }
 
 void displayMazeGraph(MazeArray maze) {
+  if (maze.getStartLocation() == null) {
+    print('\nCannot build graph: maze has no start tile.');
+    return;
+  }
   final graph = MazeGraph(maze);
   graph.printGraph(stdout);
 }
 
 void solveMaze(MazeArray maze, String outputPath) {
+  if (maze.getStartLocation() == null) {
+    print('\n=== Solution ===');
+    print('Cannot solve: maze has no start tile.');
+    return;
+  }
+  if (maze.getNodesByType(SpotType.end) == null) {
+    print('\n=== Solution ===');
+    print('Cannot solve: maze has no end tile.');
+    return;
+  }
   final graph = MazeGraph(maze);
   final solver = MazeShortestPath(graph);
   final res = solver.findPath();

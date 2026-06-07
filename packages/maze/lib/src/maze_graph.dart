@@ -21,11 +21,12 @@ class MazeNode {
 class MazeGraph {
   final Map<MazeLocation, List<MazeNode>> nodes = {};
   final MazeArray underlyingMazeArray;
-  late final MazeNode startNode;
+  late final MazeNode? startNode;
 
   MazeGraph(this.underlyingMazeArray) {
     _buildGraph();
-    startNode = getNode(underlyingMazeArray.getStartLocation())!;
+    final startLocation = underlyingMazeArray.getStartLocation();
+    startNode = startLocation != null ? getNode(startLocation) : null;
   }
 
   void _buildGraph() {

@@ -59,8 +59,8 @@ class MazeArray {
     }
   }
 
-  MazeLocation getStartLocation() {
-    return getNodesByType( SpotType.start)!;
+  MazeLocation? getStartLocation() {
+    return getNodesByType(SpotType.start);
   }
 
   MazeLocation? getNodesByType(SpotType type) {

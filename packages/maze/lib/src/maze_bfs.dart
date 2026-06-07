@@ -26,9 +26,11 @@ class MazeShortestPath {
   /// Runs BFS from the start node to find the end node.
   /// Returns a BfsResult containing the path, distance, and visited nodes.
   BfsResult findPath() {
+    if (graph.startNode == null) return BfsResult.notFound();
+
     final Queue<PathState> queue = Queue();
 
-    queue.add(PathState(node: graph.startNode));
+    queue.add(PathState(node: graph.startNode!));
     while (queue.isNotEmpty) {
       final current = queue.removeFirst();
       print('Q: ${queue.length} State is $current');

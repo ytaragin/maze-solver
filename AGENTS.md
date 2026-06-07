@@ -24,6 +24,7 @@ flutter run                    # Default device
 flutter run -d chrome          # Web browser
 flutter run -d linux           # Linux desktop
 flutter run -d windows         # Windows desktop
+flutter run -d web-server      # web server 
 
 # CLI tool
 dart run bin/maze_tool.dart <maze.csv>
