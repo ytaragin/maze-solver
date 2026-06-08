@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:ui' as ui;
+import 'package:provider/provider.dart';
+import '../services/tile_image_cache.dart';
 
 /// Sidebar widget displaying available tiles grouped by type.
 /// User selects a type (path/coin/start/end), then picks a shape.
@@ -32,48 +33,15 @@ enum TileType {
 
 class _TilePaletteState extends State<TilePalette> {
   TileType _selectedType = TileType.path;
-  final Map<int, ui.Image> _tileImages = {};
-  bool _isLoading = true;
 
   static const List<int> _baseShapeIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   static const List<int> _specialIds = [41, 42, 43];
-
-  static List<int> get _allTileIds => [
-        for (final base in _baseShapeIds) ...[
-          base,
-          base + 10,
-          base + 20,
-          base + 30,
-        ],
-        ..._specialIds,
-      ];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadImages();
-  }
-
-  Future<void> _loadImages() async {
-    for (final id in _allTileIds) {
-      try {
-        final data = await rootBundle.load('tiles/Variant$id.png');
-        final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
-        final frame = await codec.getNextFrame();
-        _tileImages[id] = frame.image;
-      } catch (_) {
-        // Skip tiles with missing images
-      }
-    }
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
-  }
 
   int _resolvedId(int baseId) => baseId + _selectedType.offset;
 
   @override
   Widget build(BuildContext context) {
+    final cache = context.watch<TileImageCache>();
     return Container(
       width: 220,
       decoration: BoxDecoration(
@@ -81,9 +49,7 @@ class _TilePaletteState extends State<TilePalette> {
           right: BorderSide(color: Theme.of(context).dividerColor),
         ),
       ),
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
+      child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Type selector at top
@@ -125,7 +91,7 @@ class _TilePaletteState extends State<TilePalette> {
                       final tileId = _resolvedId(baseId);
                       return _TileButton(
                         tileId: tileId,
-                        image: _tileImages[tileId],
+                        image: cache.imageFor(tileId),
                         isSelected: widget.selectedTileId == tileId,
                         onTap: () => widget.onTileSelected(tileId),
                       );
@@ -150,7 +116,7 @@ class _TilePaletteState extends State<TilePalette> {
                     children: _specialIds.map((id) {
                       return _TileButton(
                         tileId: id,
-                        image: _tileImages[id],
+                        image: cache.imageFor(id),
                         isSelected: widget.selectedTileId == id,
                         onTap: () => widget.onTileSelected(id),
                       );

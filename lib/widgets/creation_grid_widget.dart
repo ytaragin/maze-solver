@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:maze/maze.dart';
+import 'package:provider/provider.dart';
+import '../services/tile_image_cache.dart';
 
 /// Editable grid canvas where the user places tiles to build a maze.
 /// Left-click places the selected tile, right-click clears a cell.
@@ -24,6 +27,7 @@ class CreationGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cache = context.watch<TileImageCache>();
     final gridWidth = cols * tileSize;
     final gridHeight = rows * tileSize;
 
@@ -42,6 +46,7 @@ class CreationGrid extends StatelessWidget {
                 cols: cols,
                 tileSize: tileSize,
                 mazeArray: mazeArray,
+                tileImageFor: cache.imageFor,
               ),
             ),
           ),
@@ -80,12 +85,14 @@ class _GridPainter extends CustomPainter {
   final int cols;
   final double tileSize;
   final MazeArray mazeArray;
+  final ui.Image? Function(int) tileImageFor;
 
   _GridPainter({
     required this.rows,
     required this.cols,
     required this.tileSize,
     required this.mazeArray,
+    required this.tileImageFor,
   });
 
   @override
@@ -115,29 +122,37 @@ class _GridPainter extends CustomPainter {
         final tile = mazeArray.getTile(row, col);
         final isEmpty = tile.id == 0;
         canvas.drawRect(rect, isEmpty ? fillPaint : occupiedPaint);
-        canvas.drawRect(rect, borderPaint);
 
-        // Show tile ID text if occupied
         if (!isEmpty) {
-          final textPainter = TextPainter(
-            text: TextSpan(
-              text: '${tile.id}',
-              style: TextStyle(
-                color: Colors.blue.shade700,
-                fontSize: tileSize * 0.3,
-                fontWeight: FontWeight.bold,
+          final image = tileImageFor(tile.id);
+          if (image != null) {
+            final srcRect = Rect.fromLTWH(
+                0, 0, image.width.toDouble(), image.height.toDouble());
+            canvas.drawImageRect(image, srcRect, rect, Paint());
+          } else {
+            // Fallback: show tile ID as text
+            final textPainter = TextPainter(
+              text: TextSpan(
+                text: '${tile.id}',
+                style: TextStyle(
+                  color: Colors.blue.shade700,
+                  fontSize: tileSize * 0.3,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            textDirection: TextDirection.ltr,
-          )..layout();
-          textPainter.paint(
-            canvas,
-            Offset(
-              col * tileSize + (tileSize - textPainter.width) / 2,
-              row * tileSize + (tileSize - textPainter.height) / 2,
-            ),
-          );
+              textDirection: TextDirection.ltr,
+            )..layout();
+            textPainter.paint(
+              canvas,
+              Offset(
+                col * tileSize + (tileSize - textPainter.width) / 2,
+                row * tileSize + (tileSize - textPainter.height) / 2,
+              ),
+            );
+          }
         }
+
+        canvas.drawRect(rect, borderPaint);
       }
     }
   }
