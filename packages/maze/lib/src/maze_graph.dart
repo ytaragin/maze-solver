@@ -21,12 +21,11 @@ class MazeNode {
 class MazeGraph {
   final Map<MazeLocation, List<MazeNode>> nodes = {};
   final MazeArray underlyingMazeArray;
-  late final MazeNode? startNode;
+  late final MazeNode startNode;
 
   MazeGraph(this.underlyingMazeArray) {
     _buildGraph();
-    final startLocation = underlyingMazeArray.getStartLocation();
-    startNode = startLocation != null ? getNode(startLocation) : null;
+    startNode = getNode(underlyingMazeArray.getStartLocation())!;
   }
 
   void _buildGraph() {
@@ -87,12 +86,19 @@ class MazeGraph {
         node.location,
         dir,
       );
-      final nodes = getNodes(loc) ?? <MazeNode>[];
-      // print('Ce=hecking if $node can connect');
-      for (var otherNode in nodes) {
-        // print("\tChecking $otherNode");
+      if (loc == null) continue;
+
+      // Check for nodes at any height (z=0 or z=1) at this row/col
+      final targetZ0 = MazeLocation(row: loc.row, col: loc.col, z: 0);
+      final targetZ1 = MazeLocation(row: loc.row, col: loc.col, z: 1);
+      
+      final potentialNodes = [
+        ...getNodes(targetZ0) ?? [],
+        ...getNodes(targetZ1) ?? [],
+      ];
+
+      for (var otherNode in potentialNodes) {
         if (node.tile.canConnectToOtherTileInDirection(dir, otherNode.tile)) {
-          // print("\tIt can");
           node.addNeighbor(otherNode);
         }
       }

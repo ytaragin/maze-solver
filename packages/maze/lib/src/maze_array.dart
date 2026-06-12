@@ -11,10 +11,13 @@ class MazeLocation {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is MazeLocation && other.row == row && other.col == col;
+      other is MazeLocation && 
+      other.row == row && 
+      other.col == col && 
+      other.z == z;
 
   @override
-  int get hashCode => Object.hash(row, col);
+  int get hashCode => Object.hash(row, col, z);
 
   @override
   String toString() => '($row,$col,($z))';
@@ -59,8 +62,8 @@ class MazeArray {
     }
   }
 
-  MazeLocation? getStartLocation() {
-    return getNodesByType(SpotType.start);
+  MazeLocation getStartLocation() {
+    return getNodesByType( SpotType.start)!;
   }
 
   MazeLocation? getNodesByType(SpotType type) {
