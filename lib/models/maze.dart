@@ -17,7 +17,7 @@ class Maze {
   }
 
   bool _checkValidity() {
-    return mazeArray.getStartLocation() != null &&
+    return mazeArray.getNodesByType(SpotType.start) != null &&
         mazeArray.getNodesByType(SpotType.end) != null;
   }
 

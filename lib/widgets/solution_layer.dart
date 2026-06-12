@@ -27,7 +27,15 @@ class SolutionLayerState extends State<SolutionLayer> {
   void initState() {
     super.initState();
     generateSolution();
+  }
 
+  @override
+  void didUpdateWidget(SolutionLayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.maze != widget.maze) {
+      generateSolution();
+      _depth = 1;
+    }
   }
 
   void generateSolution() {

@@ -23,6 +23,7 @@ class PathState {
   final MazeNode node;
   final int coinsCollected;
   final Set<EdgeVisit> visitedEdges;
+  final Set<MazeNode> visitedNodes;
   final List<MazeNode> path;
   final bool allowLoops;
   final bool stopAtBridgesAlways;
@@ -30,13 +31,14 @@ class PathState {
   PathState({
     required this.node,
     this.coinsCollected = 0,
-    Set<MazeLocation>? visitedCoinLocations,
     Set<EdgeVisit>? visitedEdges,
+    Set<MazeNode>? visitedNodes,
     List<MazeNode>? path,
     this.allowLoops = false,
     this.stopAtBridgesAlways = false,
-  }) : visitedEdges = visitedEdges ?? {},
-       path = path ?? [node];
+  })  : visitedEdges = visitedEdges ?? {},
+        visitedNodes = visitedNodes ?? {node},
+        path = path ?? [node];
 
   /// Creates a new PathState by cloning the current state with modifications.
   PathState next({required int coinsDelta, required MazeNode newNode}) {
@@ -46,6 +48,10 @@ class PathState {
       visitedEdges: {
         ...visitedEdges,
         EdgeVisit(node.location, newNode.location, coinsCollected),
+      },
+      visitedNodes: {
+        ...visitedNodes,
+        newNode,
       },
       path: [...path, newNode],
       allowLoops: allowLoops,
@@ -68,7 +74,7 @@ class PathState {
       case SpotType.cent:
         // A coin only gives a value if we haven't visited this specific node before
         // in our entire history.
-        final hasVisited = path.any((node) => node == neighborNode);
+        final hasVisited = visitedNodes.contains(neighborNode);
         final coinsSpent = hasVisited ? 0 : -1;
         return (true, coinsSpent);
       case SpotType.wall:

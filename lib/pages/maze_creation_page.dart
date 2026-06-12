@@ -24,8 +24,14 @@ class _MazeCreationPageState extends State<MazeCreationPage> {
   }
 
   Future<void> _showDimensionDialog() async {
-    final rowsController = TextEditingController(text: '5');
-    final colsController = TextEditingController(text: '5');
+    final rowsController = TextEditingController(text: '10');
+    final colsController = TextEditingController(text: '10');
+
+    void submit() {
+      final rows = int.tryParse(rowsController.text) ?? 10;
+      final cols = int.tryParse(colsController.text) ?? 10;
+      Navigator.of(context).pop((rows: rows, cols: cols));
+    }
 
     final result = await showDialog<({int rows, int cols})>(
       context: context,
@@ -41,12 +47,14 @@ class _MazeCreationPageState extends State<MazeCreationPage> {
                 decoration: const InputDecoration(labelText: 'Rows'),
                 keyboardType: TextInputType.number,
                 autofocus: true,
+                onSubmitted: (_) => submit(),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: colsController,
                 decoration: const InputDecoration(labelText: 'Columns'),
                 keyboardType: TextInputType.number,
+                onSubmitted: (_) => submit(),
               ),
             ],
           ),
@@ -56,11 +64,7 @@ class _MazeCreationPageState extends State<MazeCreationPage> {
               child: const Text('Cancel'),
             ),
             FilledButton(
-              onPressed: () {
-                final rows = int.tryParse(rowsController.text) ?? 5;
-                final cols = int.tryParse(colsController.text) ?? 5;
-                Navigator.of(context).pop((rows: rows, cols: cols));
-              },
+              onPressed: submit,
               child: const Text('Create'),
             ),
           ],

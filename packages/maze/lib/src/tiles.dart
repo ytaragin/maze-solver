@@ -143,9 +143,14 @@ class TileManager {
     _tiles.clear();
   }
 
+  static TileManager? _instance;
+
   /// Creates a TileManager with variant tiles for the given IDs.
   factory TileManager.withVariants() {
+    if (_instance != null) return _instance!;
+    
     final manager = TileManager();
+    _instance = manager;
 
     void addSetOfTiles(int baseId, Set<Direction> directions) {
       manager.addTile(Tile.variant(baseId, SpotType.path, directions));

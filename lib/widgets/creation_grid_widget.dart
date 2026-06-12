@@ -19,7 +19,7 @@ class CreationGrid extends StatelessWidget {
     required this.selectedTileId,
     required this.onCellTap,
     required this.onCellClear,
-    this.tileSize = 48.0,
+    this.tileSize = 30.0,
   });
 
   int get rows => mazeArray.rows;
@@ -158,5 +158,11 @@ class _GridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_GridPainter oldDelegate) => true;
+  bool shouldRepaint(_GridPainter oldDelegate) {
+    return oldDelegate.mazeArray != mazeArray ||
+        oldDelegate.tileSize != tileSize ||
+        oldDelegate.tileImageFor != tileImageFor ||
+        oldDelegate.rows != rows ||
+        oldDelegate.cols != cols;
+  }
 }

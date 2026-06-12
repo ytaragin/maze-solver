@@ -49,29 +49,25 @@ class _MazeCreationWidgetState extends State<MazeCreationWidget> {
   void _onCellTap(({int row, int col}) cell) {
     if (_selectedTileId == null) return;
     setState(() {
-      print('Tapped cell: (${cell.row}, ${cell.col}) with tile ID: $_selectedTileId');
-      _maze.mazeArray.tiles[cell.row][cell.col] =
+      final newMazeArray = _maze.mazeArray.copy();
+      newMazeArray.tiles[cell.row][cell.col] =
           _tileManager.getTile(_selectedTileId!);
-      _rebuildMaze();
+      _maze = Maze(mazeArray: newMazeArray, csvPath: 'created');
     });
   }
 
   void _onCellClear(({int row, int col}) cell) {
     setState(() {
-      _maze.mazeArray.tiles[cell.row][cell.col] =
+      final newMazeArray = _maze.mazeArray.copy();
+      newMazeArray.tiles[cell.row][cell.col] =
           _tileManager.getTile(emptyTileId);
-      _rebuildMaze();
+      _maze = Maze(mazeArray: newMazeArray, csvPath: 'created');
     });
   }
 
   /// Whether every cell has been filled (no tile with ID 0).
   bool get isGridComplete => _maze.mazeArray.tiles
       .every((row) => row.every((tile) => tile.id != emptyTileId));
-
-  /// Rebuild the Maze wrapper to get a fresh MazeGraph.
-  void _rebuildMaze() {
-    _maze = Maze(mazeArray: _maze.mazeArray, csvPath: 'created');
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -35,6 +35,14 @@ class _InteractiveMazeState extends State<InteractiveMaze> {
     _loadMaze();
   }
 
+  @override
+  void didUpdateWidget(InteractiveMaze oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.csvPath != widget.csvPath) {
+      _loadMaze();
+    }
+  }
+
   Future<void> _loadMaze() async {
     try {
       _maze = await Maze.fromAsset(widget.csvPath);

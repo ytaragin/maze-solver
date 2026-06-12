@@ -30,6 +30,13 @@ class MazeArray {
   int get rows => tiles.length;
   int get cols => tiles.isEmpty ? 0 : tiles[0].length;
 
+  /// Creates a deep copy of the tiles list.
+  MazeArray copy() {
+    return MazeArray(
+      tiles: tiles.map((row) => List<Tile>.from(row)).toList(),
+    );
+  }
+
   const MazeArray({required this.tiles});
 
   /// Loads a maze from CSV string content.
@@ -62,8 +69,8 @@ class MazeArray {
     }
   }
 
-  MazeLocation getStartLocation() {
-    return getNodesByType( SpotType.start)!;
+  MazeLocation? getStartLocation() {
+    return getNodesByType(SpotType.start);
   }
 
   MazeLocation? getNodesByType(SpotType type) {

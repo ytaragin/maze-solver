@@ -79,5 +79,9 @@ class CsvMazePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CsvMazePainter oldDelegate) => true;
+  bool shouldRepaint(CsvMazePainter oldDelegate) {
+    return oldDelegate.maze != maze ||
+        oldDelegate.coordinates != coordinates ||
+        oldDelegate.tileImageFor != tileImageFor;
+  }
 }
