@@ -111,21 +111,13 @@ class PathOverlayState extends State<PathOverlay> {
 
     // Get target location using maze logic
     if (direction != null) {
-      final targetLocation = widget.maze.mazeArray.getLocationInDirection(
-        _mazePath.currentLocation,
-        direction,
-      );
-      
-      // Try to move if we have a valid target location
-      if (targetLocation != null) {
-        final newPath = _mazePath.moveToLocation(targetLocation);
-        if (newPath != null) {
-          setState(() {
-            _history.add(_mazePath);
-            _mazePath = newPath;
-          });
-          widget.onPathChanged?.call(_mazePath);
-        }
+      final newPath = _mazePath.moveInDirection(direction);
+      if (newPath != null) {
+        setState(() {
+          _history.add(_mazePath);
+          _mazePath = newPath;
+        });
+        widget.onPathChanged?.call(_mazePath);
       }
     }
   }

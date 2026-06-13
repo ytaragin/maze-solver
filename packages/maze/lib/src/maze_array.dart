@@ -18,6 +18,18 @@ class MazeLocation {
 
   @override
   String toString() => '($row,$col,($z))';
+
+  /// Returns the direction from this location to [other], or null if not adjacent.
+  Direction? directionTo(MazeLocation other) {
+    final dRow = other.row - row;
+    final dCol = other.col - col;
+
+    if (dRow == -1 && dCol == 0) return Direction.north;
+    if (dRow == 1 && dCol == 0) return Direction.south;
+    if (dRow == 0 && dCol == 1) return Direction.east;
+    if (dRow == 0 && dCol == -1) return Direction.west;
+    return null;
+  }
 }
 
 /// Represents a 2D array of tiles loaded from a CSV file.

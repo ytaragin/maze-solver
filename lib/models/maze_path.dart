@@ -103,6 +103,20 @@ class MazePath {
     return null; // Invalid move
   }
 
+  /// Advance along a corridor in the given [direction] until a decision point.
+  /// Returns a new MazePath if successful, null if no valid move in that direction.
+  MazePath? moveInDirection(Direction direction) {
+    final result = pathState.advanceInDirection(direction);
+    if (result == null) return null;
+
+    final newLocations = result.nodesTraversed.map((n) => n.location).toList();
+    return MazePath._(
+      graph: graph,
+      pathState: result.finalState,
+      userPath: [...userPath, ...newLocations],
+    );
+  }
+
   /// Check if the path has reached the end
   bool hasReachedEnd() {
     final endLocation = graph.underlyingMazeArray.getNodesByType(SpotType.end);

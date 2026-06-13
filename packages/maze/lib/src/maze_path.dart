@@ -106,43 +106,66 @@ class PathState {
     return allowedNeighbors;
   }
 
-  /// Returns a list of all nodes reachable from the current node without branching.
+  /// Returns a list of all corridors reachable from the current node.
   ///
-  /// Starting from the current node, this follows each path until it reaches:
+  /// Starting from the current node, this follows each allowed neighbor until
+  /// it reaches:
   /// - A dead end (no further neighbors)
-  /// - A branch point (multiple neighbors, excluding the path we came from)
+  /// - A branch point (multiple neighbors)
+  /// - The end tile
   ///
-  /// Returns a list where each element is a list of nodes representing one non-branching path.
-  List<List<MazeNode>> getDirectReachableNeighbors() {
-    final result = <List<MazeNode>>[];
+  /// Each entry contains the final [PathState] and the nodes traversed.
+  List<({PathState finalState, List<MazeNode> nodesTraversed})>
+      getDirectReachableNeighbors() {
+    final result = <({PathState finalState, List<MazeNode> nodesTraversed})>[];
     final initialNeighbors = getAllowedNeighbors();
 
-    for (final (neighbor, coinsDelta) in initialNeighbors) {
-      final path = <MazeNode>[neighbor];
-      var currentState = next(coinsDelta: coinsDelta, newNode: neighbor);
+    for (final (neighbor, coinsSpent) in initialNeighbors) {
+      final nodesTraversed = <MazeNode>[neighbor];
+      var currentState = next(coinsDelta: -coinsSpent, newNode: neighbor);
 
-      while (true) {
-        // Get all allowed neighbors from the current state
-        final allowedNeighbors = currentState.getAllowedNeighbors();
+      if (neighbor.tile.type != SpotType.end) {
+        while (true) {
+          final allowedNeighbors = currentState.getAllowedNeighbors();
 
-        // If there's exactly one neighbor, continue following the path
-        if (allowedNeighbors.length == 1) {
-          final (nextNode, nextCoinsDelta) = allowedNeighbors.first;
-          currentState = currentState.next(
-            coinsDelta: nextCoinsDelta,
-            newNode: nextNode,
-          );
-          path.add(nextNode);
-        } else {
-          // Either a dead end (0 neighbors) or a branch (2+ neighbors) - stop here
-          break;
+          if (allowedNeighbors.length == 1) {
+            final (nextNode, nextCoinsSpent) = allowedNeighbors.first;
+            currentState = currentState.next(
+              coinsDelta: -nextCoinsSpent,
+              newNode: nextNode,
+            );
+            nodesTraversed.add(nextNode);
+
+            if (nextNode.tile.type == SpotType.end) break;
+          } else {
+            break;
+          }
         }
       }
 
-      result.add(path);
+      result.add(
+        (finalState: currentState, nodesTraversed: nodesTraversed),
+      );
     }
 
     return result;
+  }
+
+  /// Advances in the given [direction] along the corridor until reaching a
+  /// decision point (branch/dead-end) or the end tile.
+  ///
+  /// Returns the final [PathState] and the list of nodes traversed,
+  /// or null if no valid move exists in that direction.
+  ({PathState finalState, List<MazeNode> nodesTraversed})? advanceInDirection(
+    Direction direction,
+  ) {
+    for (final corridor in getDirectReachableNeighbors()) {
+      final firstNode = corridor.nodesTraversed.first;
+      if (node.location.directionTo(firstNode.location) == direction) {
+        return corridor;
+      }
+    }
+    return null;
   }
 
   @override
