@@ -7,3 +7,4 @@ export 'src/spot_type.dart';
 export 'src/maze_graph.dart';
 export 'src/maze_path.dart';
 export 'src/maze_bfs.dart';
+export 'src/lane_path_geometry.dart';

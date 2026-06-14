@@ -186,27 +186,57 @@ class PathPainter extends CustomPainter {
       ..color = pathColor
       ..style = PaintingStyle.fill;
 
-    // Draw lines connecting path points
-    for (int i = 0; i < path.length - 1; i++) {
-      final start = coordinates.locationToCenter(path[i]);
-      final end = coordinates.locationToCenter(path[i + 1]);
-      canvas.drawLine(start, end, linePaint);
+    // Paint for the directional arrowheads
+    final arrowPaint = Paint()
+      ..color = pathColor.withOpacity(0.6)
+      ..style = PaintingStyle.fill;
+
+    // Compute off-center "two-lane" segments using the shared geometry so the
+    // overlay matches the PNG solution renderer.
+    final geometry = LanePathGeometry(tileSize: coordinates.tileSize);
+    final segments = geometry.computeSegments(path);
+
+    for (final segment in segments) {
+      canvas.drawLine(
+        Offset(segment.start.x, segment.start.y),
+        Offset(segment.end.x, segment.end.y),
+        linePaint,
+      );
+
+      final arrow = segment.arrow;
+      if (arrow != null) {
+        final arrowPath = Path()
+          ..moveTo(arrow[0].x, arrow[0].y)
+          ..lineTo(arrow[1].x, arrow[1].y)
+          ..lineTo(arrow[2].x, arrow[2].y)
+          ..close();
+        canvas.drawPath(arrowPath, arrowPaint);
+      }
     }
 
-    // Draw dots at each point
-    for (final location in path) {
-      final center = coordinates.locationToCenter(location);
-      canvas.drawCircle(center, 6.0, dotPaint);
+    // Draw dots at the lane points the path actually passes through. The
+    // segments are contiguous, so the vertices are the first segment's start
+    // followed by each segment's end.
+    final pathPoints = <Offset>[
+      if (segments.isNotEmpty)
+        Offset(segments.first.start.x, segments.first.start.y),
+      for (final segment in segments) Offset(segment.end.x, segment.end.y),
+    ];
+
+    // Fallback for a single-location path with no segments.
+    if (pathPoints.isEmpty) {
+      pathPoints.add(coordinates.locationToCenter(path.first));
+    }
+
+    for (final point in pathPoints) {
+      canvas.drawCircle(point, 2.0, dotPaint);
     }
 
     // Highlight the latest point
-    if (path.isNotEmpty) {
-      final lastCenter = coordinates.locationToCenter(path.last);
-      final highlightPaint = Paint()
-        ..color = highlightColor
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(lastCenter, 8.0, highlightPaint);
-    }
+    final highlightPaint = Paint()
+      ..color = highlightColor
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(pathPoints.last, 8.0, highlightPaint);
   }
 
   @override

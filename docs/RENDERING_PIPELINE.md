@@ -90,10 +90,15 @@ Usage: `dart run bin/maze_tool.dart -s -r mazes/maze1.csv`
 
 - `renderToPng()`: creates `img.Image(width, height)`, fills white background, iterates all tiles calling `tileRenderer.renderTile()`, optionally overlays solution path, encodes to PNG bytes
 
+#### LanePathGeometry (`packages/maze/lib/src/lane_path_geometry.dart`)
+
+- Rendering-agnostic geometry shared by both renderers (pure Dart, no `image`/Flutter deps)
+- Uses a 3x3 grid within each tile to pick off-center entry/exit points based on direction, producing the "two-lane" appearance where opposite-direction paths are drawn in separate visible lanes
+- `computeSegments(List<({int row, int col})>)`: returns `LaneSegment` records (start/end points plus optional arrowhead vertices); callers rasterize them with their own drawing primitives
+
 #### SolutionPathDraw (`packages/maze_image/lib/src/solution_path_draw.dart`)
 
-- `drawPath(List<TileLocation>)`: draws directional arrows between consecutive path tiles
-- Uses a 3x3 grid within each tile to determine entry/exit points based on direction
+- `drawPath(List<TileLocation>)`: delegates lane geometry to `LanePathGeometry`, then rasterizes the returned segments
 - Draws lines and arrowhead polygons via `img.drawLine` and `img.fillPolygon`
 
 ## Key Differences: Flutter vs CLI Rendering
@@ -103,5 +108,6 @@ Usage: `dart run bin/maze_tool.dart -s -r mazes/maze1.csv`
 | Image library | `dart:ui` (GPU) | `package:image` (software) |
 | Tile loading | `rootBundle` assets | `dart:io` file reads |
 | Output | Screen canvas | PNG bytes on disk |
-| Solution overlay | `PathPainter` (lines + dots) | `SolutionPathDraw` (lines + arrows) |
+| Solution overlay | `PathPainter` (shared lanes + arrows + dots) | `SolutionPathDraw` (shared lanes + arrows) |
+| Lane geometry | `LanePathGeometry` (shared) | `LanePathGeometry` (shared) |
 | Interactivity | Yes (tap, keyboard) | No |
